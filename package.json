@@ -14,8 +14,10 @@
     "react-router-dom": "^4.2.2",
     "react-router-page-transition": "^3.1.0",
     "react-scripts": "1.1.4",
+    "react-select": "^1.2.1",
     "react-spinkit": "^3.0.0",
-    "reactstrap": "^5.0.0-beta.3"
+    "reactstrap": "^5.0.0-beta.3",
+    "sweetalert-react": "^0.4.11"
   },
   "scripts": {
     "start": "PORT=3001 react-scripts start",

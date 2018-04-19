@@ -1,9 +1,10 @@
 import axios from 'axios';
 import _ from 'lodash';
 import React from 'react';
-import { Container, Input, Table } from 'reactstrap';
-
+import { Button, Col, Container, Input, Row, Table } from 'reactstrap';
 import './App.css';
+
+const API_ENDPOINT = true ? `${window.location.protocol}//${window.location.host}/api` : 'http://127.0.0.1:3000';
 
 export default class ListPage extends React.Component {
   constructor() {
@@ -20,7 +21,7 @@ export default class ListPage extends React.Component {
   }
 
   searchWord(search) {
-    return axios.get('http://127.0.0.1:3000/lingeo', {
+    return axios.get(`${API_ENDPOINT}/lingeo`, {
       params: {
         search: search,
         limit:  this.state.limit,
@@ -38,7 +39,6 @@ export default class ListPage extends React.Component {
             trs.push((<tr key={word.id} onClick={() => this.goToItem(word.id)}>
               <th scope="row">{word.id}</th>
               <td>{word.eng}</td>
-              <td>{'ffs'}</td>
             </tr>));
           });
           this.setState({ trs: trs });
@@ -54,17 +54,24 @@ export default class ListPage extends React.Component {
   render() {
     return (
       <Container className="transition-item list-page" fluid={false}>
-        <Input
-          placeholder="Type Here…"
-          type="text"
-          onChange={this.onSearch.bind(this)}
-        />
+        <Row>
+          <Col xs="11">
+            <Input
+              placeholder="Type Here…"
+              type="text"
+              onChange={this.onSearch.bind(this)}
+            />
+          </Col>
+          <Col>
+            <Button color="primary" onClick={() => this.props.history.push({ pathname: '/new' })}>+</Button>
+          </Col>
+        </Row>
+        <hr/>
         <Table>
           <thead>
           <tr>
             <th>#</th>
             <th>ENG</th>
-            <th>GEO</th>
           </tr>
           </thead>
           <tbody>

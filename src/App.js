@@ -12,12 +12,12 @@ class App extends Component {
       <Router>
         <Route
           render={({ location }) => (
-            <PageTransition timeout={500}>
+            <PageTransition timeout={250}>
               <Switch location={location}>
                 <Route exact path="/" component={ListPage}/>
                 <Route path="/item/:id" component={ItemDetailPage}/>
-                <Route path="/item" component={ItemDetailPage}/>
                 <Route path="/new" component={ItemDetailPage}/>
+                <Route path="/item" component={ItemDetailPage}/>
               </Switch>
             </PageTransition>
           )}
