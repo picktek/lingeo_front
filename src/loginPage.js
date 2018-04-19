@@ -41,11 +41,10 @@ export default class LoginForm extends React.Component {
     return axios.post(`${API_ENDPOINT}/login`, {
       username: username,
       password: password
-    }).then(() => this.props.history.goBack())
-                .catch(() => this.setState({
-                  error:     { code: 'invalidCredentials' },
-                  loggingIn: false
-                }));
+    }).then(() => this.props.history.goBack()).catch(() => this.setState({
+      error:     { code: 'invalidCredentials' },
+      loggingIn: false
+    }));
   }
 
   renderLoginError() {
