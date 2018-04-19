@@ -5,6 +5,7 @@ import PageTransition from 'react-router-page-transition';
 import './App.css';
 import ItemDetailPage from './ItemDetailPage';
 import ListPage from './List';
+import LoginPage from './loginPage';
 
 class App extends Component {
   render() {
@@ -18,6 +19,7 @@ class App extends Component {
                 <Route path="/item/:id" component={ItemDetailPage}/>
                 <Route path="/new" component={ItemDetailPage}/>
                 <Route path="/item" component={ItemDetailPage}/>
+                <Route path="/login" component={LoginPage}/>
               </Switch>
             </PageTransition>
           )}
