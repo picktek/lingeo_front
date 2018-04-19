@@ -3,7 +3,7 @@ import _ from 'lodash';
 import React from 'react';
 import { Alert } from 'reactstrap';
 
-const API_ENDPOINT = false ? `${window.location.protocol}//${window.location.host}/api` : 'http://127.0.0.1:3000';
+const API_ENDPOINT = true ? `${window.location.protocol}//${window.location.host}/api` : 'http://127.0.0.1:3000';
 
 export default class LoginForm extends React.Component {
   constructor() {

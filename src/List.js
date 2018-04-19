@@ -4,7 +4,7 @@ import React from 'react';
 import { Button, Col, Container, Input, Row, Table } from 'reactstrap';
 import './App.css';
 
-const API_ENDPOINT = false ? `${window.location.protocol}//${window.location.host}/api` : 'http://127.0.0.1:3000';
+const API_ENDPOINT = true ? `${window.location.protocol}//${window.location.host}/api` : 'http://127.0.0.1:3000';
 
 export default class ListPage extends React.Component {
   constructor() {
