@@ -56,6 +56,12 @@ export default class ItemDetailPage extends React.Component {
                    data:    item,
                    dataRN:  _.clone(item)
                  });
+               })
+               .catch(e => {
+                 if (e.response.status === 401) {
+                   console.log(e);
+                   this.props.history.push({ pathname: '/login' });
+                 }
                });
   }
 
@@ -87,13 +93,15 @@ export default class ItemDetailPage extends React.Component {
                   }
                 })
                 .then(() => this.setState({ saveConfirmShow: false }))
-                .then(() => this.loadWord());
+                .then(() => this.loadWord())
+                .catch(e => alert(e));
   }
 
   deleteItem() {
     return axios.post(`${API_ENDPOINT}/lingeo/delete/${this.eng_id}`)
                 .then(() => this.setState({ deleteConfirmShow: false }))
-                .then(() => this.props.history.goBack());
+                .then(() => this.props.history.goBack())
+                .catch(e => alert(e));
   }
 
   addGeo() {
