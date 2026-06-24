@@ -1,43 +1,52 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link, Navigate, useNavigate, useParams } from 'react-router';
 
-import { deleteWord, getWord, getWordTypes, saveWord } from '@/features/dictionary/api';
+import {
+  deleteWordSqlite,
+  getWordSqlite,
+  getWordTypesSqlite,
+  saveWordSqlite,
+} from '@/features/dictionary/sqliteRepository';
 import {
   createEmptyDictionaryItem,
   type DictionaryItem,
   type Translation,
 } from '@/features/dictionary/types';
 import { Spinner } from '@/shared/components/Spinner';
+import { useSqlite } from '@/shared/sqlite/SqliteProvider';
 
 export function ItemPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const sqlite = useSqlite();
   const isNew = !id;
   const [item, setItem] = useState<DictionaryItem>(() => createEmptyDictionaryItem());
 
   const wordQuery = useQuery({
-    queryKey: ['word', id],
-    queryFn: () => getWord(id!),
-    enabled: !isNew,
+    queryKey: ['word', id, sqlite.fileName],
+    queryFn: () => getWordSqlite({ db: sqlite.db!, schema: sqlite.schema! }, id!),
+    enabled: sqlite.isReady && !isNew,
   });
 
   const wordTypesQuery = useQuery({
-    queryKey: ['word-types'],
-    queryFn: getWordTypes,
+    queryKey: ['word-types', sqlite.fileName],
+    queryFn: () => getWordTypesSqlite({ db: sqlite.db!, schema: sqlite.schema! }),
+    enabled: sqlite.isReady,
   });
 
   const saveMutation = useMutation({
-    mutationFn: saveWord,
+    mutationFn: (nextItem: DictionaryItem) => saveWordSqlite({ db: sqlite.db!, schema: sqlite.schema! }, nextItem),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['words'] });
+      await queryClient.invalidateQueries({ queryKey: ['word'] });
       navigate('/');
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: deleteWord,
+    mutationFn: (wordId: number) => deleteWordSqlite({ db: sqlite.db!, schema: sqlite.schema! }, wordId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['words'] });
       navigate('/');
@@ -55,6 +64,10 @@ export function ItemPage() {
       });
     }
   }, [wordQuery.data]);
+
+  if (!sqlite.isReady) {
+    return <Navigate to="/" replace />;
+  }
 
   const title = isNew ? 'Add word' : `Edit ${item.eng || 'word'}`;
   const wordTypes = wordTypesQuery.data ?? [];
@@ -146,7 +159,7 @@ export function ItemPage() {
 
       {wordQuery.isError || wordTypesQuery.isError ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          Could not load this word. Please go back and try again.
+          Could not load this word from SQLite. Please check the database schema.
         </div>
       ) : null}
 
@@ -260,7 +273,7 @@ export function ItemPage() {
 
         {saveMutation.isError || deleteMutation.isError ? (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            Could not save changes. Please check the fields and try again.
+            Could not save SQLite changes. Please check required columns, foreign keys, and constraints.
           </div>
         ) : null}
 
