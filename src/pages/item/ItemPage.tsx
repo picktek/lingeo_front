@@ -48,8 +48,10 @@ export function ItemPage() {
     if (wordQuery.data) {
       setItem({
         ...wordQuery.data,
+        eng: wordQuery.data.eng ?? '',
+        transcription: wordQuery.data.transcription ?? '',
         eng_type: wordQuery.data.eng_type ?? null,
-        geos: wordQuery.data.geos?.length ? wordQuery.data.geos : [{ geo: '', type_id: null }],
+        geos: wordQuery.data.geos ?? [],
       });
     }
   }, [wordQuery.data]);
@@ -60,7 +62,7 @@ export function ItemPage() {
   const hasTranslations = item.geos.length > 0;
 
   const sortedWordTypes = useMemo(
-    () => [...wordTypes].sort((a, b) => a.type.localeCompare(b.type)),
+    () => [...wordTypes].sort((a, b) => a.name.localeCompare(b.name)),
     [wordTypes],
   );
 
@@ -78,10 +80,14 @@ export function ItemPage() {
   }
 
   function addTranslation() {
-    setItem((current) => ({
-      ...current,
-      geos: [...current.geos, { geo: '', type_id: null }],
-    }));
+    setItem((current) => {
+      const minId = Math.min(-1, ...current.geos.map((translation) => translation.id));
+
+      return {
+        ...current,
+        geos: [...current.geos, { id: minId - 1, geo: '', type_id: 1 }],
+      };
+    });
   }
 
   function removeTranslation(index: number) {
@@ -97,7 +103,7 @@ export function ItemPage() {
   }
 
   function handleDelete() {
-    if (!item.id) {
+    if (item.id === -1) {
       return;
     }
 
@@ -126,7 +132,7 @@ export function ItemPage() {
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">{title}</h1>
         </div>
 
-        {!isNew && item.id ? (
+        {!isNew && item.id !== -1 ? (
           <button
             className="rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50"
             disabled={isBusy}
@@ -152,7 +158,7 @@ export function ItemPage() {
               <input
                 className="rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-slate-900 transition focus:ring-2"
                 required
-                value={item.eng}
+                value={item.eng ?? ''}
                 onChange={(event) => updateItem('eng', event.target.value)}
               />
             </label>
@@ -169,7 +175,7 @@ export function ItemPage() {
                 <option value="">Select type</option>
                 {sortedWordTypes.map((type) => (
                   <option key={type.id} value={type.id}>
-                    {type.type} ({type.abbr})
+                    {type.name} ({type.abbr})
                   </option>
                 ))}
               </select>
@@ -179,7 +185,7 @@ export function ItemPage() {
               Transcription
               <input
                 className="rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-slate-900 transition focus:ring-2"
-                value={item.transcription}
+                value={item.transcription ?? ''}
                 onChange={(event) => updateItem('transcription', event.target.value)}
               />
             </label>
@@ -206,13 +212,16 @@ export function ItemPage() {
             )}
 
             {item.geos.map((translation, index) => (
-              <div className="grid gap-3 rounded-xl border border-slate-200 p-4 md:grid-cols-[1fr_220px_auto]" key={index}>
+              <div
+                className="grid gap-3 rounded-xl border border-slate-200 p-4 md:grid-cols-[1fr_220px_auto]"
+                key={translation.id}
+              >
                 <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                   Georgian word
                   <input
                     className="rounded-lg border border-slate-300 px-3 py-2 text-base outline-none ring-slate-900 transition focus:ring-2"
                     placeholder="ქართული სიტყვა"
-                    value={translation.geo}
+                    value={translation.geo ?? ''}
                     onChange={(event) => updateTranslation(index, { geo: event.target.value })}
                   />
                 </label>
@@ -231,7 +240,7 @@ export function ItemPage() {
                     <option value="">Select type</option>
                     {sortedWordTypes.map((type) => (
                       <option key={type.id} value={type.id}>
-                        {type.type} ({type.abbr})
+                        {type.name} ({type.abbr})
                       </option>
                     ))}
                   </select>
