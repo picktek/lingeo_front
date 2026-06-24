@@ -30,7 +30,7 @@ export function DatabaseToolbar() {
           </p>
           {schema ? (
             <p className="mt-1 text-xs text-slate-500">
-              Tables: {schema.english.table}, {schema.translations.table}, {schema.wordTypes.table}
+              Tables: {schema.english.table}, {schema.geoEnglish.table}, {schema.geo.table}, {schema.wordTypes.table}
             </p>
           ) : null}
           {error ? <p className="mt-1 text-xs text-red-600">{error}</p> : null}
