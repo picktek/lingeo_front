@@ -33,13 +33,14 @@ Browser security prevents a normal web app from silently overwriting an arbitrar
 
 ## Expected schema
 
-The schema detector looks for:
+The implementation supports the legacy `lingeo_back` database shape:
 
-- an English word table with `id` and `eng` columns
-- optional English columns: `transcription` or `transcript`, `eng_type` or `type_id` or `word_type_id`
-- a Georgian translation table with `id`, `geo`, and one of `eng_id`, `english_id`, `word_id`, or `item_id`
-- optional Georgian type column: `type_id` or `word_type_id`
-- a word type table with `id`, `abbr`, and `name` or `type`
+- `eng`: English words, with `id`, `eng`, `type`, and `transcription`
+- `geo`: Georgian words, with `id`, `geo`, and `type`
+- `geo_eng`: join table, with `eng_id`, `geo_id`, and optional `type`
+- `types`: word types, with `id`, `name`, and `abbr`
+
+The old backend stores Georgian text in keyboard-encoded Latin characters and converts it in the API. This frontend now performs the same encode/decode step while reading and writing SQLite rows.
 
 If your SQLite schema uses different names, update `src/shared/sqlite/schema.ts`.
 
