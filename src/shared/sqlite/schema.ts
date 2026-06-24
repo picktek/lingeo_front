@@ -13,11 +13,16 @@ export type SqliteSchema = {
     transcription?: string;
     engType?: string;
   };
-  translations: {
+  geo: {
     table: string;
     id: string;
-    englishId: string;
     geo: string;
+    typeId: string;
+  };
+  geoEnglish: {
+    table: string;
+    englishId: string;
+    geoId: string;
     typeId?: string;
   };
   wordTypes: {
@@ -67,7 +72,9 @@ export function detectSqliteSchema(db: Database): SqliteSchema {
   const tableNames = getTables(db);
   const tables = tableNames.map((table) => ({ table, columns: getColumns(db, table) }));
 
-  const englishTable = tables.find(({ columns }) => hasColumn(columns, 'id') && hasColumn(columns, 'eng'));
+  const englishTable = tables.find(({ table, columns }) =>
+    table === 'eng' || (hasColumn(columns, 'id') && hasColumn(columns, 'eng')),
+  );
 
   if (!englishTable) {
     throw new Error(
@@ -77,45 +84,38 @@ export function detectSqliteSchema(db: Database): SqliteSchema {
     );
   }
 
-  const wordTypesTable = tables.find(
-    ({ columns }) =>
-      hasColumn(columns, 'id') &&
-      hasColumn(columns, 'abbr') &&
-      Boolean(findFirstColumn(columns, ['name', 'type'])),
+  const geoTable = tables.find(({ table, columns }) =>
+    table === 'geo' || (hasColumn(columns, 'id') && hasColumn(columns, 'geo') && hasColumn(columns, 'type')),
+  );
+
+  if (!geoTable) {
+    throw new Error('Could not find Georgian word table. Expected columns: id, geo, type.');
+  }
+
+  const geoEnglishTable = tables.find(({ table, columns }) =>
+    table === 'geo_eng' ||
+    (hasColumn(columns, 'eng_id') && hasColumn(columns, 'geo_id')) ||
+    (hasColumn(columns, 'english_id') && hasColumn(columns, 'geo_id')),
+  );
+
+  if (!geoEnglishTable) {
+    throw new Error('Could not find English/Georgian join table. Expected geo_eng with eng_id and geo_id.');
+  }
+
+  const wordTypesTable = tables.find(({ table, columns }) =>
+    table === 'types' ||
+    (hasColumn(columns, 'id') && hasColumn(columns, 'abbr') && Boolean(findFirstColumn(columns, ['name', 'type']))),
   );
 
   if (!wordTypesTable) {
     throw new Error('Could not find word type table. Expected columns: id, name/type, abbr.');
   }
 
-  const translationsTable = tables.find(({ table, columns }) => {
-    if (table === englishTable.table || table === wordTypesTable.table) {
-      return false;
-    }
-
-    return (
-      hasColumn(columns, 'id') &&
-      hasColumn(columns, 'geo') &&
-      Boolean(findFirstColumn(columns, ['eng_id', 'english_id', 'word_id', 'item_id']))
-    );
-  });
-
-  if (!translationsTable) {
-    throw new Error(
-      'Could not find Georgian translation table. Expected columns: id, geo, and one of eng_id/english_id/word_id/item_id.',
-    );
-  }
-
-  const englishId = findFirstColumn(translationsTable.columns, [
-    'eng_id',
-    'english_id',
-    'word_id',
-    'item_id',
-  ]);
   const typeName = findFirstColumn(wordTypesTable.columns, ['name', 'type']);
-  const translationTypeId = findFirstColumn(translationsTable.columns, ['type_id', 'word_type_id']);
+  const englishId = findFirstColumn(geoEnglishTable.columns, ['eng_id', 'english_id', 'word_id', 'item_id']);
+  const geoId = findFirstColumn(geoEnglishTable.columns, ['geo_id', 'translation_id']);
 
-  if (!englishId || !typeName) {
+  if (!typeName || !englishId || !geoId) {
     throw new Error('Could not detect required schema fields.');
   }
 
@@ -125,14 +125,19 @@ export function detectSqliteSchema(db: Database): SqliteSchema {
       id: 'id',
       eng: 'eng',
       transcription: findFirstColumn(englishTable.columns, ['transcription', 'transcript']),
-      engType: findFirstColumn(englishTable.columns, ['eng_type', 'type_id', 'word_type_id']),
+      engType: findFirstColumn(englishTable.columns, ['type', 'eng_type', 'type_id', 'word_type_id']),
     },
-    translations: {
-      table: translationsTable.table,
+    geo: {
+      table: geoTable.table,
       id: 'id',
-      englishId,
       geo: 'geo',
-      typeId: translationTypeId,
+      typeId: findFirstColumn(geoTable.columns, ['type', 'type_id', 'word_type_id']) ?? 'type',
+    },
+    geoEnglish: {
+      table: geoEnglishTable.table,
+      englishId,
+      geoId,
+      typeId: findFirstColumn(geoEnglishTable.columns, ['type', 'type_id', 'word_type_id']),
     },
     wordTypes: {
       table: wordTypesTable.table,
