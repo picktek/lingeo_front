@@ -30,8 +30,7 @@ export function getWordTypes() {
 }
 
 export function saveWord(item: DictionaryItem) {
-  const id = item.id ?? 0;
-  return apiPost<DictionaryItem>(`/lingeo/${id}`, item);
+  return apiPost<{ new_eng_id?: number } | DictionaryItem>(`/lingeo/${item.id}`, item);
 }
 
 export function deleteWord(id: number) {
