@@ -1,4 +1,5 @@
 import initSqlJs, { type Database, type SqlJsStatic } from 'sql.js';
+import wasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 import type { PropsWithChildren } from 'react';
 import { createContext, useContext, useMemo, useState } from 'react';
 
@@ -21,7 +22,7 @@ let sqlPromise: Promise<SqlJsStatic> | null = null;
 
 function loadSqlJs() {
   sqlPromise ??= initSqlJs({
-    locateFile: (file) => `https://sql.js.org/dist/${file}`,
+    locateFile: () => wasmUrl,
   });
 
   return sqlPromise;
@@ -70,7 +71,9 @@ export function SqliteProvider({ children }: PropsWithChildren) {
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = fileName ? fileName.replace(/(\.sqlite|\.sqlite3|\.db)?$/i, '.updated.sqlite') : 'lingeo.updated.sqlite';
+        anchor.download = fileName
+          ? fileName.replace(/(\.sqlite|\.sqlite3|\.db)?$/i, '.updated.sqlite')
+          : 'lingeo.updated.sqlite';
         anchor.click();
         URL.revokeObjectURL(url);
       },
