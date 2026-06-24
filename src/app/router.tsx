@@ -3,10 +3,12 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router';
 import { ItemPage } from '@/pages/item/ItemPage';
 import { ListPage } from '@/pages/list/ListPage';
 import { LoginPage } from '@/pages/login/LoginPage';
+import { DatabaseToolbar } from '@/shared/sqlite/DatabaseToolbar';
 
 function RootLayout() {
   return (
     <main className="min-h-screen">
+      <DatabaseToolbar />
       <Outlet />
     </main>
   );
