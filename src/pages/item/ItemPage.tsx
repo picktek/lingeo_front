@@ -65,10 +65,6 @@ export function ItemPage() {
     }
   }, [wordQuery.data]);
 
-  if (!sqlite.isReady) {
-    return <Navigate to="/" replace />;
-  }
-
   const title = isNew ? 'Add word' : `Edit ${item.eng || 'word'}`;
   const wordTypes = wordTypesQuery.data ?? [];
   const isBusy = saveMutation.isPending || deleteMutation.isPending;
@@ -125,6 +121,10 @@ export function ItemPage() {
     if (confirmed) {
       deleteMutation.mutate(item.id);
     }
+  }
+
+  if (!sqlite.isReady) {
+    return <Navigate to="/" replace />;
   }
 
   if (wordQuery.isLoading || wordTypesQuery.isLoading) {
