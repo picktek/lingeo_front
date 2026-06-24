@@ -2,17 +2,22 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
-import { PAGE_SIZE, searchWords } from '@/features/dictionary/api';
+import { searchWordsSqlite } from '@/features/dictionary/sqliteRepository';
 import { Spinner } from '@/shared/components/Spinner';
+import { useSqlite } from '@/shared/sqlite/SqliteProvider';
+
+const PAGE_SIZE = 50;
 
 export function ListPage() {
   const navigate = useNavigate();
+  const sqlite = useSqlite();
   const [search, setSearch] = useState('');
   const [offset, setOffset] = useState(0);
 
   const query = useQuery({
-    queryKey: ['words', search, offset],
-    queryFn: () => searchWords({ search, offset }),
+    queryKey: ['words', search, offset, sqlite.fileName],
+    enabled: sqlite.isReady,
+    queryFn: () => searchWordsSqlite({ db: sqlite.db!, schema: sqlite.schema! }, { search, offset, limit: PAGE_SIZE }),
   });
 
   const page = Math.floor(offset / PAGE_SIZE) + 1;
@@ -21,12 +26,16 @@ export function ListPage() {
   const canGoForward = offset + PAGE_SIZE < total;
 
   const emptyMessage = useMemo(() => {
+    if (!sqlite.isReady) {
+      return 'Open a SQLite database file to view words.';
+    }
+
     if (query.isLoading) {
       return null;
     }
 
     return search ? 'No matching words found.' : 'No words found.';
-  }, [query.isLoading, search]);
+  }, [query.isLoading, search, sqlite.isReady]);
 
   return (
     <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
@@ -37,8 +46,9 @@ export function ListPage() {
         </div>
 
         <Link
-          className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700"
-          to="/new"
+          className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+          aria-disabled={!sqlite.isReady}
+          to={sqlite.isReady ? '/new' : '#'}
         >
           Add word
         </Link>
@@ -50,7 +60,8 @@ export function ListPage() {
         </label>
         <input
           id="word-search"
-          className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-slate-900 transition focus:ring-2"
+          className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none ring-slate-900 transition focus:ring-2 disabled:bg-slate-100"
+          disabled={!sqlite.isReady}
           placeholder="Type an English word…"
           value={search}
           onChange={(event) => {
@@ -64,7 +75,7 @@ export function ListPage() {
 
       {query.isError ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          Could not load words. Please try again.
+          Could not load words. Please check that the SQLite schema matches the expected dictionary tables.
         </div>
       ) : null}
 
