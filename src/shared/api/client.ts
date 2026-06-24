@@ -11,8 +11,6 @@ export class ApiError extends Error {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
 
-type JsonBody = Record<string, unknown> | unknown[] | string | number | boolean | null;
-
 async function parseResponse<T>(response: Response): Promise<T> {
   if (response.status === 401 && window.location.pathname !== '/login') {
     window.location.assign('/login');
@@ -52,7 +50,7 @@ export async function apiGet<T>(path: string, params?: URLSearchParams): Promise
   return parseResponse<T>(response);
 }
 
-export async function apiPost<T>(path: string, body?: JsonBody): Promise<T> {
+export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
     credentials: 'include',
